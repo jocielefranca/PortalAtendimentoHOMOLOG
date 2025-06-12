@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal de Procedimentos de Atendimento </title>
+    <title>Portal de Procedimentos - Victa</title>
     <style>
         * {
             margin: 0;
@@ -457,6 +457,36 @@
             cursor: pointer;
         }
 
+        .data-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            color: #0a4d3a;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sync-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #2ecc71;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.5; transform: scale(0.9); }
+            50% { opacity: 1; transform: scale(1.1); }
+            100% { opacity: 0.5; transform: scale(0.9); }
+        }
+
         @media (max-width: 768px) {
             .procedures-grid {
                 grid-template-columns: 1fr;
@@ -476,7 +506,7 @@
     <div class="container">
         <div class="header">
             <h1>📋 Portal de Procedimentos</h1>
-            <p>Consulte rapidamente todos os procedimentos do time de estrelas</p>
+            <p>Consulte rapidamente todos os procedimentos da equipe</p>
         </div>
 
         <div class="admin-mode-toggle">
@@ -553,9 +583,29 @@
         </div>
     </div>
 
+    <div class="data-status">
+        <div class="sync-indicator"></div>
+        Dados sincronizados com armazenamento local
+    </div>
+
     <script>
+        // Função para salvar os procedimentos no localStorage
+        function saveToLocalStorage() {
+            localStorage.setItem('victaProcedures', JSON.stringify(procedures));
+            console.log('Dados salvos com sucesso!');
+        }
+
+        // Função para carregar os procedimentos do localStorage
+        function loadFromLocalStorage() {
+            const savedProcedures = localStorage.getItem('victaProcedures');
+            if (savedProcedures) {
+                return JSON.parse(savedProcedures);
+            }
+            return null;
+        }
+
         // Dados iniciais baseados no documento fornecido
-        let procedures = [
+        let initialProcedures = [
             {
                 id: 1,
                 title: "Boletos",
@@ -770,9 +820,27 @@
             }
         ];
 
-        let filteredProcedures = [...procedures];
+        let procedures = [];
+        let filteredProcedures = [];
         let adminMode = false;
         let currentProcedureId = null;
+
+        // Carregar procedimentos do localStorage ou usar os iniciais
+        function loadProcedures() {
+            const savedProcedures = loadFromLocalStorage();
+            
+            if (savedProcedures && savedProcedures.length > 0) {
+                procedures = savedProcedures;
+                console.log('Dados carregados do armazenamento local');
+            } else {
+                procedures = [...initialProcedures];
+                saveToLocalStorage();
+                console.log('Dados iniciais carregados e salvos');
+            }
+            
+            filteredProcedures = [...procedures];
+            renderProcedures();
+        }
 
         function renderProcedures() {
             const container = document.getElementById('proceduresContainer');
@@ -945,6 +1013,7 @@
                         details: details.replace(/\n/g, '<br>'),
                         tags: tags ? tags.split(',').map(tag => tag.trim().toLowerCase()) : []
                     };
+                    saveToLocalStorage();
                     alert('Procedimento atualizado com sucesso!');
                 }
             } else {
@@ -961,6 +1030,7 @@
                     active: true
                 };
                 procedures.push(newProcedure);
+                saveToLocalStorage();
                 alert('Procedimento adicionado com sucesso!');
             }
             
@@ -1011,6 +1081,7 @@
                     procedures.splice(index, 1);
                 }
                 
+                saveToLocalStorage();
                 filteredProcedures = [...procedures];
                 renderProcedures();
             }
@@ -1034,7 +1105,7 @@
         });
 
         // Inicializar
-        renderProcedures();
+        loadProcedures();
     </script>
 </body>
 </html>
